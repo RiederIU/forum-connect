@@ -2,6 +2,11 @@
 
 require_once __DIR__ . '/../models/User.php';
 
+/**
+ * Controller für den Admin-Bereich.
+ * Nur Nutzer mit der Rolle 'admin' haben Zugriff.
+ */
+
 class AdminController
 {
     // =========================================================================
@@ -38,19 +43,15 @@ class AdminController
         $userId  = (int) ($_POST['user_id'] ?? 0);
         $newRole = $_POST['role'] ?? '';
 
-        /**
-         * Selbstschutz. Ein Admin darf seine eigene Rolle nicht ändern.
-         * Andernfalls könnte sich der einzige Admin versehentlich zum Nutzer degradieren.
-         * Die Nutzerverwaltung wäre dann ohne direkten Datenbankeingriff dauerhaft gesperrt.
-         */
-        if ($userId === currentUser()['id']) {
+        // Eigene Rolle nicht änderbar, sonst sperrt man sich selbst aus
+        if ($userId === (int) currentUser()['id']) {
             setFlash('error', 'Die eigene Rolle kann nicht geändert werden.');
             header('Location: index.php?action=admin.users');
             exit;
         }
 
-        $target = User::getById($userId);
-        if (!$target) {
+        $targetUser = User::getById($userId);
+        if (!$targetUser) {
             setFlash('error', 'Nutzer nicht gefunden.');
             header('Location: index.php?action=admin.users');
             exit;
@@ -62,14 +63,14 @@ class AdminController
             exit;
         }
 
-        logAction('ROLE_CHANGE', "target=$userId ({$target['username']}) new_role=$newRole");
-        setFlash('success', 'Rolle von „' . htmlspecialchars($target['username']) . '" auf „' . htmlspecialchars($newRole) . '" geändert.');
+        logAction('ROLE_CHANGE', "target=$userId ({$targetUser['username']}) new_role=$newRole");
+        setFlash('success', 'Rolle von „' . $targetUser['username'] . '" auf „' . $newRole . '" geändert.');
         header('Location: index.php?action=admin.users');
         exit;
     }
 
     // =========================================================================
-    //  Nutzer löschen (mit Selbstschutz, CASCADE auf Topics/Posts)
+    //  Nutzer löschen (inkl. Selbstschutz, Themen und Beiträge werden mitgelöscht)
     // =========================================================================
 
     public static function deleteUser(): void
@@ -85,22 +86,22 @@ class AdminController
 
         $userId = (int) ($_POST['user_id'] ?? 0);
 
-        if ($userId === currentUser()['id']) {
+        if ($userId === (int) currentUser()['id']) {
             setFlash('error', 'Das eigene Konto kann nicht gelöscht werden.');
             header('Location: index.php?action=admin.users');
             exit;
         }
 
-        $target = User::getById($userId);
-        if (!$target) {
+        $targetUser = User::getById($userId);
+        if (!$targetUser) {
             setFlash('error', 'Nutzer nicht gefunden.');
             header('Location: index.php?action=admin.users');
             exit;
         }
 
         User::delete($userId);
-        logAction('USER_DELETE', "target=$userId ({$target['username']})");
-        setFlash('success', 'Nutzer „' . htmlspecialchars($target['username']) . '" und alle zugehörigen Inhalte gelöscht.');
+        logAction('USER_DELETE', "target=$userId ({$targetUser['username']})");
+        setFlash('success', 'Nutzer „' . $targetUser['username'] . '" und alle zugehörigen Inhalte gelöscht.');
         header('Location: index.php?action=admin.users');
         exit;
     }

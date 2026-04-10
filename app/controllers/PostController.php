@@ -3,6 +3,11 @@
 require_once __DIR__ . '/../models/Post.php';
 require_once __DIR__ . '/../models/Topic.php';
 
+/**
+ * Controller für Forenbeiträge.
+ * Erstellen, Bearbeiten und Löschen erfordern einen Login.
+ */
+
 class PostController
 {
     // =========================================================================
@@ -30,11 +35,7 @@ class PostController
             exit;
         }
 
-        /**
-         * Prüft, ob das Ziel-Thema existiert.
-         * Ohne diese Prüfung würde eine manipulierte topic_id einen Datenbankfehler auslösen.
-         * Eine explizite Prüfung liefert eine verständliche Fehlermeldung statt einer rohen Exception.
-         */
+        // Thema-Existenz prüfen, sonst gibt es einen kryptischen DB-Fehler
         $topic = Topic::getById($topicId);
         if (!$topic) {
             setFlash('error', 'Thema nicht gefunden.');
@@ -63,7 +64,7 @@ class PostController
     {
         requireLogin();
 
-        $id   = (int) ($_GET['id'] ?? (int) ($_POST['id'] ?? 0));
+        $id   = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
         $post = Post::getById($id);
 
         if (!$post) {
@@ -72,11 +73,7 @@ class PostController
             exit;
         }
 
-        /**
-         * Gleiche RBAC-Logik wie im TopicController.
-         * Eigentümer dürfen nur eigene Beiträge bearbeiten.
-         * Moderatoren und Admins dürfen auch fremde Beiträge bearbeiten.
-         */
+        // Nur Eigentümer oder Moderator/Admin dürfen bearbeiten
         if ($post['user_id'] !== currentUser()['id'] && !hasRole('moderator')) {
             setFlash('error', 'Keine Berechtigung für diese Aktion.');
             header('Location: index.php?action=topics.show&id=' . $post['topic_id']);
@@ -91,7 +88,7 @@ class PostController
             return;
         }
 
-        // --- POST-Verarbeitung ---
+        // POST-Verarbeitung
 
         if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
             setFlash('error', 'Ungültiges Formular-Token.');
@@ -129,6 +126,12 @@ class PostController
     {
         requireLogin();
 
+        if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+            setFlash('error', 'Ungültiges Formular-Token.');
+            header('Location: index.php?action=topics.index');
+            exit;
+        }
+
         $id   = (int) ($_POST['id'] ?? 0);
         $post = Post::getById($id);
 
@@ -139,12 +142,6 @@ class PostController
 
         if ($post['user_id'] !== currentUser()['id'] && !hasRole('moderator')) {
             setFlash('error', 'Keine Berechtigung für diese Aktion.');
-            header('Location: index.php?action=topics.show&id=' . $post['topic_id']);
-            exit;
-        }
-
-        if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
-            setFlash('error', 'Ungültiges Formular-Token.');
             header('Location: index.php?action=topics.show&id=' . $post['topic_id']);
             exit;
         }

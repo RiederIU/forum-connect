@@ -2,10 +2,15 @@
 
 require_once __DIR__ . '/../models/User.php';
 
+/**
+ * Controller für Registrierung, Login und Logout.
+ * Verarbeitet jeweils GET (Formular anzeigen) und POST (Absenden).
+ */
+
 class AuthController
 {
     // =========================================================================
-    //  11a  Registrierung
+    //  Registrierung
     // =========================================================================
 
     public static function register(): void
@@ -32,10 +37,7 @@ class AuthController
         $password        = $_POST['password'] ?? '';
         $passwordConfirm = $_POST['password_confirm'] ?? '';
 
-        /**
-         * Sammelt alle Validierungsfehler für eine gemeinsame Ausgabe.
-         * Verhindert, dass der Nutzer das Formular pro Fehler neu absenden muss.
-         */
+        // Alle Fehler sammeln und am Ende gemeinsam ausgeben
         $errors = [];
 
         if (empty($username)) {
@@ -75,7 +77,7 @@ class AuthController
     }
 
     // =========================================================================
-    //  11b  Login
+    //  Login
     // =========================================================================
 
     public static function login(): void
@@ -102,10 +104,7 @@ class AuthController
 
         $user = User::findByEmail($email);
 
-        /**
-         * Bei fehlgeschlagenem Login wird immer dieselbe Meldung ausgegeben.
-         * So lässt sich nicht erkennen, ob E-Mail oder Passwort falsch war.
-         */
+        // Einheitliche Fehlermeldung, damit kein Rückschluss auf gültige E-Mails möglich ist
         if (!$user || !password_verify($password, $user['password_hash'])) {
             logAction('LOGIN_FAIL', 'email=' . $email);
             setFlash('error', 'Ungültige Anmeldedaten.');
@@ -113,9 +112,7 @@ class AuthController
             exit;
         }
 
-        /**
-         * Neue Session-ID generieren, alte serverseitig löschen (Session-Fixation-Schutz).
-         */
+        // Neue Session-ID gegen Session-Fixation
         session_regenerate_id(true);
 
         $_SESSION['user'] = [
@@ -126,23 +123,20 @@ class AuthController
         ];
 
         logAction('LOGIN_OK', 'email=' . $email);
-        setFlash('success', 'Willkommen, ' . htmlspecialchars($user['username']) . '!');
+        setFlash('success', 'Willkommen, ' . $user['username'] . '!');
         header('Location: index.php?action=topics.index');
         exit;
     }
 
     // =========================================================================
-    //  11c  Logout
+    //  Logout
     // =========================================================================
 
     public static function logout(): void
     {
         logAction('LOGOUT', '');
 
-        /**
-         * Aktuelle Session komplett beenden und neu starten,
-         * da Flash-Messages eine aktive Session brauchen.
-         */
+        // Session beenden und neu starten, da setFlash() eine aktive Session braucht
         $_SESSION = [];
         session_destroy();
 

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Hilfsfunktionen für Authentifizierung und Autorisierung.
+ * Stellt eine rollenbasierte Zugriffskontrolle mit Hierarchie bereit.
+ */
+
 function isLoggedIn(): bool
 {
     return isset($_SESSION['user']);
@@ -11,10 +16,7 @@ function currentUser(): ?array
 }
 
 /**
- * Rollenbasierte Zugriffskontrolle über numerische Hierarchie.
- *
- * admin(3) > moderator(2) > user(1).
- * Ein >= Vergleich deckt alle höheren Rollen automatisch ab.
+ * Rollenprüfung über numerische Hierarchie (user=1, moderator=2, admin=3).
  */
 
 function hasRole(string $requiredRole): bool

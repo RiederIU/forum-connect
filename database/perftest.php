@@ -1,10 +1,7 @@
 <?php
 /**
- * Performancetest: Nachweis, dass paginierte Abfragen auch bei
- * wachsender Datenmenge innerhalb akzeptabler Antwortzeiten bleiben.
- *
- * Erzeugt 500 Themen mit je 5 Beiträgen (2.500 Posts), misst die
- * Ladezeit von Topic::getAll() und bereinigt die Testdaten danach.
+ * Performancetest mit 500 Themen und je 5 Beiträgen.
+ * Misst Ladezeiten und bereinigt die Testdaten danach.
  *
  * Ausführung: php database/perftest.php
  */
@@ -25,13 +22,7 @@ $adminId = (int) $db->query("SELECT id FROM users WHERE role = 'admin'")->fetchC
 //  1. Massendaten erzeugen (in einer Transaktion für Geschwindigkeit)
 // =========================================================================
 
-/**
- * Alle Inserts innerhalb einer einzelnen Transaktion: SQLite schreibt
- * ohne explizite Transaktion nach jedem INSERT ein fsync auf die Datei.
- * Bei 3.000 Einzeloperationen würde das mehrere Minuten dauern.
- * Innerhalb einer Transaktion wird nur ein einziger fsync am Ende
- * ausgeführt — der Unterschied beträgt typischerweise Faktor 50–100.
- */
+// Alle Inserts in einer Transaktion, sonst ist SQLite sehr langsam.
 
 echo "Generiere 500 Themen mit je 5 Beiträgen...\n";
 
@@ -92,7 +83,7 @@ $ms2    = round(($end - $start) * 1000, 2);
 echo "Topic::getAll(1, 10) mit Suche:     {$ms2} ms  ({$result['total']} Treffer)\n";
 
 // =========================================================================
-//  4. Ladezeit messen: Letzte Seite (Worst Case für OFFSET)
+//  4. Ladezeit messen: Letzte Seite (ungünstigster Fall für große Seitenversätze)
 // =========================================================================
 
 $lastPage = (int) ceil($result['total'] / PER_PAGE);
@@ -101,7 +92,7 @@ $result   = Topic::getAll($lastPage, PER_PAGE, 'Performancetest');
 $end      = microtime(true);
 $ms3      = round(($end - $start) * 1000, 2);
 
-echo "Topic::getAll($lastPage, 10) letzte Seite:  {$ms3} ms\n";
+echo "Topic::getAll($lastPage, 10) hoher OFFSET:   {$ms3} ms\n";
 
 // =========================================================================
 //  5. Bewertung
@@ -113,7 +104,7 @@ $threshold = 200;
 $allOk = ($ms1 < $threshold && $ms2 < $threshold && $ms3 < $threshold);
 
 if ($allOk) {
-    echo "✅ Alle Abfragen unter {$threshold} ms — Pagination performant.\n";
+    echo "✅ Alle Abfragen unter {$threshold} ms. Pagination performant.\n";
 } else {
     echo "⚠️  Mindestens eine Abfrage über {$threshold} ms.\n";
     echo "   Empfehlung: Index auf topics.title ergänzen:\n";

@@ -7,7 +7,7 @@
             <a href="index.php?action=topics.edit&id=<?= $topic['id'] ?>">Thema bearbeiten</a>
         <?php endif; ?>
         <?php if ($topic['user_id'] === currentUser()['id'] || hasRole('admin')): ?>
-            <form method="POST" action="index.php?action=topics.delete" style="display:inline">
+            <form method="POST" action="index.php?action=topics.delete" class="inline-form">
                 <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <input type="hidden" name="id" value="<?= $topic['id'] ?>">
                 <button type="submit" class="delete" onclick="return confirm('Thema und alle Beiträge wirklich löschen?')">Thema löschen</button>
@@ -35,7 +35,7 @@
                         <a href="index.php?action=posts.edit&id=<?= $post['id'] ?>">Bearbeiten</a>
                     <?php endif; ?>
                     <?php if ($post['user_id'] === currentUser()['id'] || hasRole('moderator')): ?>
-                        <form method="POST" action="index.php?action=posts.delete" style="display:inline">
+                        <form method="POST" action="index.php?action=posts.delete" class="inline-form">
                             <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                             <input type="hidden" name="id" value="<?= $post['id'] ?>">
                             <button type="submit" class="delete" onclick="return confirm('Beitrag wirklich löschen?')">Löschen</button>

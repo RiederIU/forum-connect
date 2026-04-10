@@ -3,6 +3,11 @@
 require_once __DIR__ . '/../models/Topic.php';
 require_once __DIR__ . '/../models/Post.php';
 
+/**
+ * Controller für Forenthemen.
+ * Die Übersicht ist öffentlich, Schreibaktionen erfordern einen Login.
+ */
+
 class TopicController
 {
     // =========================================================================
@@ -26,7 +31,7 @@ class TopicController
     }
 
     // =========================================================================
-    //  Thema erstellen (inkl. erstem Beitrag als atomare Transaktion)
+    //  Thema erstellen (Thema und erster Beitrag in einer Transaktion)
     // =========================================================================
 
     public static function create(): void
@@ -65,19 +70,9 @@ class TopicController
             exit;
         }
 
-        /**
-         * Thema und erster Beitrag werden in einer Transaktion angelegt.
-         * Schlägt das Einfügen des Beitrags fehl, wird das Thema komplett zurückgerollt.
-         */
-        $db = getDB();
-        $db->beginTransaction();
-
         try {
-            $topicId = Topic::create($title, currentUser()['id']);
-            Post::create($content, currentUser()['id'], $topicId);
-            $db->commit();
+            $topicId = Topic::createWithFirstPost($title, $content, currentUser()['id']);
         } catch (Exception $e) {
-            $db->rollBack();
             logAction('TOPIC_CREATE_FAIL', 'error=' . $e->getMessage());
             setFlash('error', 'Fehler beim Erstellen des Themas.');
             header('Location: index.php?action=topics.index');
@@ -125,7 +120,7 @@ class TopicController
     {
         requireLogin();
 
-        $id    = (int) ($_GET['id'] ?? (int) ($_POST['id'] ?? 0));
+        $id    = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
         $topic = Topic::getById($id);
 
         if (!$topic) {
@@ -134,10 +129,7 @@ class TopicController
             exit;
         }
 
-        /**
-         * RBAC-Prüfung. Eigentümer dürfen ihr eigenes Thema bearbeiten.
-         * Moderatoren und Admins dürfen jedes Thema bearbeiten.
-         */
+        // Nur Eigentümer oder Moderator/Admin dürfen bearbeiten
         if ($topic['user_id'] !== currentUser()['id'] && !hasRole('moderator')) {
             setFlash('error', 'Keine Berechtigung für diese Aktion.');
             header('Location: index.php?action=topics.index');
@@ -182,11 +174,13 @@ class TopicController
     {
         requireLogin();
 
-        /**
-         * Löschaktionen laufen ausschließlich über POST.
-         * GET-Requests sind zustandslos und dürfen keine Daten verändern.
-         * Ein einfacher Bild-Link wie <img src="...?action=topics.delete&id=5"> würde sonst einen CSRF-Angriff ermöglichen.
-         */
+        if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+            setFlash('error', 'Ungültiges Formular-Token.');
+            header('Location: index.php?action=topics.index');
+            exit;
+        }
+
+        // Löschen nur via POST (GET darf keine Daten verändern)
         $id    = (int) ($_POST['id'] ?? 0);
         $topic = Topic::getById($id);
 
@@ -197,12 +191,6 @@ class TopicController
 
         if ($topic['user_id'] !== currentUser()['id'] && !hasRole('admin')) {
             setFlash('error', 'Keine Berechtigung für diese Aktion.');
-            header('Location: index.php?action=topics.index');
-            exit;
-        }
-
-        if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
-            setFlash('error', 'Ungültiges Formular-Token.');
             header('Location: index.php?action=topics.index');
             exit;
         }

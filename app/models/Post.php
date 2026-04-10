@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Modell für Forenbeiträge.
+ * Kapselt alle Datenbankoperationen auf der posts-Tabelle.
+ */
+
 class Post
 {
     public static function getByTopic(int $topicId, int $page, int $perPage): array
@@ -42,11 +47,7 @@ class Post
         return $post ?: null;
     }
 
-    /**
-     * Legt einen neuen Beitrag an und aktualisiert gleichzeitig updated_at des zugehörigen Themas.
-     * Dadurch sortiert die Themenübersicht automatisch nach letzter Aktivität.
-     * Dieses Verhalten nennt man Bump-Semantik und ist in Forensystemen üblich.
-     */
+    /** Legt einen neuen Beitrag an und aktualisiert updated_at des Themas. */
     public static function create(string $content, int $userId, int $topicId): int
     {
         $db = getDB();

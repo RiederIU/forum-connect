@@ -1,8 +1,7 @@
 <?php
 
 /**
- * Zentrale Applikationskonstanten.
- * Einzige Stelle für Schwellenwerte.
+ * Zentrale Konfigurationswerte der Anwendung.
  */
 
 define('APP_NAME','Webforum MVP');

@@ -1,10 +1,15 @@
 <?php
 
+/**
+ * Modell für Forenthemen.
+ * Kapselt alle Datenbankoperationen auf der topics-Tabelle.
+ */
+
 class Topic
 {
     /**
-     * Gibt alle Themen mit Pagination zurück. Optionale Suche läuft über Titel und Beitragsinhalte.
-     * COUNT(DISTINCT t.id) verhindert Doppelzählungen durch den LEFT JOIN.
+     * Liefert Themen seitenweise. Optionale Suche über Titel und Beiträge.
+     * COUNT(DISTINCT) verhindert Doppelzählung durch den LEFT JOIN.
      */
     public static function getAll(int $page, int $perPage, ?string $search = null): array
     {
@@ -27,10 +32,7 @@ class Topic
 
         $offset  = ($page - 1) * $perPage;
 
-        /**
-         * Die Subquery zählt Beiträge unabhängig vom Suchkontext.
-         * So wird immer die echte Gesamtzahl pro Thema angezeigt.
-         */
+        // Subquery zählt Beiträge unabhängig vom Suchfilter
         $dataSql = "SELECT t.*, u.username AS author,
                         (SELECT COUNT(*) FROM posts WHERE topic_id = t.id) AS post_count
                     FROM topics t
@@ -79,6 +81,24 @@ class Topic
         return (int) $db->lastInsertId();
     }
 
+    /** Legt Thema und ersten Beitrag in einer Transaktion an. */
+    public static function createWithFirstPost(string $title, string $content, int $userId): int
+    {
+        $db = getDB();
+        $db->beginTransaction();
+
+        try {
+            $topicId = self::create($title, $userId);
+            Post::create($content, $userId, $topicId);
+            $db->commit();
+            return $topicId;
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
+    /** Aktualisiert den Titel und setzt updated_at auf jetzt. */
     public static function update(int $id, string $title): void
     {
         $db = getDB();
@@ -90,6 +110,7 @@ class Topic
         $stmt->execute([':title' => $title, ':id' => $id]);
     }
 
+    /** Löscht das Thema samt Beiträgen (CASCADE). */
     public static function delete(int $id): void
     {
         $db = getDB();

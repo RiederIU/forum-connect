@@ -1,12 +1,13 @@
 <?php
 
+/**
+ * Session-Verwaltung, Flash-Messages und CSRF-Schutz.
+ */
+
 function startSession(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
-        /**
-         * Session-Cookie ist mit HttpOnly für JavaScript nicht lesbar.
-         * ini_set('session.cookie_httponly', '1');
-         */
+        // HttpOnly verhindert, dass JavaScript den Session-Cookie auslesen kann.
         ini_set('session.cookie_httponly', '1');
         session_start();
     }
@@ -31,10 +32,9 @@ function getFlash(): ?array
     return null;
 }
 
-/**
- * CSRF-Token-Management.
- * Erzeugt ein Sicherheits-Token pro Sitzung und validiert es über hash_equals().
- */
+// =========================================================================
+//  CSRF-Token
+// =========================================================================
 
 function generateCsrfToken(): string
 {
@@ -44,6 +44,7 @@ function generateCsrfToken(): string
     return $_SESSION['csrf_token'];
 }
 
+/** Prüft das CSRF-Token. hash_equals() verhindert Timing-Angriffe beim Vergleich. */
 function validateCsrfToken(string $token): bool
 {
     return isset($_SESSION['csrf_token'])

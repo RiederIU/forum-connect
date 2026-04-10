@@ -2,7 +2,8 @@
 
 <form method="GET" action="index.php" class="search-form">
     <input type="hidden" name="action" value="topics.index">
-    <input type="text" name="search" placeholder="Themen und Beiträge durchsuchen…"
+    <label for="search" class="sr-only">Themen und Beiträge durchsuchen</label>
+    <input type="text" id="search" name="search" placeholder="Themen und Beiträge durchsuchen…"
            value="<?= hsc($search) ?>">
     <button type="submit">Suchen</button>
 </form>
@@ -14,13 +15,14 @@
 <?php if (count($topics) === 0): ?>
     <p>Keine Themen gefunden.</p>
 <?php else: ?>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
                 <th>Thema</th>
                 <th>Autor</th>
                 <th>Beiträge</th>
-                <th>Erstellt</th>
+                <th>Letzte Aktivität</th>
             </tr>
         </thead>
         <tbody>
@@ -33,11 +35,12 @@
                     </td>
                     <td><?= hsc($topic['author']) ?></td>
                     <td><?= (int) $topic['post_count'] ?></td>
-                    <td><?= hsc($topic['created_at']) ?></td>
+                    <td><?= hsc($topic['updated_at']) ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
 
     <?php
     $baseUrl = 'index.php?action=topics.index';

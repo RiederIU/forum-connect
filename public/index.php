@@ -2,8 +2,8 @@
 
 /**
  * Zentraler Einstiegspunkt der Anwendung.
- * Itialisiert Session, DB-Verbindung und Helpers.
- * Das anschließende Routing an den zuständigen Controller erfolgt über den Parameter `?action=
+ * Initialisiert Session, Datenbankverbindung und Hilfsfunktionen.
+ * Welche Seite gezeigt wird, bestimmt der URL-Parameter ?action.
  */
 
 require_once __DIR__ . '/../helpers/session.php';
@@ -94,6 +94,6 @@ switch ($action) {
 
     default:
         http_response_code(404);
-        echo '404 – Seite nicht gefunden';
+        echo '404 - Seite nicht gefunden';
         break;
 }

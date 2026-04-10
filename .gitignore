@@ -1,13 +1,25 @@
-# SQLite-Datenbankdateien: enthalten nutzerbezogene Laufzeitdaten,
-# die nicht versioniert werden dürfen (DSGVO, Reproduzierbarkeit via schema.sql + seed.php).
+# SQLite-Datenbankdateien und Rollback-Journal: enthalten personenbezogene
+# Laufzeitdaten (Nutzernamen, E-Mail-Adressen, Passwort-Hashes, Beitragsinhalte)
+# und sind daher von der Versionskontrolle auszuschließen (DSGVO).
+# Die Rekonstruktion erfolgt über schema.sql und seed.php.
 *.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
 
-# Logdateien: maschinenspezifisch, potenziell personenbezogene Daten (IPs, Nutzernamen).
+# Logdateien: enthalten personenbezogene Daten (IP-Adressen, Nutzernamen,
+# Zeitstempel sicherheitsrelevanter Ereignisse).
 *.log
 
-# Umgebungskonfiguration: ggf. Secrets oder umgebungsspezifische Pfade.
+# Umgebungskonfiguration: potenzielle Zugangsdaten oder umgebungsspezifische
+# Parameter, präventiv ausgeschlossen.
 .env
 
-# IDE-Metadaten: entwicklerlokal, nicht projektrelevant.
+# IDE-Metadaten (PhpStorm, Visual Studio Code): entwicklerspezifisch,
+# keine Projektrelevanz.
 .idea/
 .vscode/
+
+# Betriebssystem-Metadaten (Windows): lokal erzeugt, keine Projektrelevanz.
+Thumbs.db
+Desktop.ini

@@ -2,7 +2,6 @@
 
 /**
  * Erstellt Tabellen und Admin-Nutzer, falls noch nicht vorhanden.
- * Das Skript kann ohne das Risiko von Duplikaten mehrfach ausgeführt werden.
  * Ausführung: php database/init.php
  */
 
@@ -17,9 +16,7 @@ $stmt = $db->prepare('SELECT COUNT(*) FROM users WHERE role = :role');
 $stmt->execute([':role' => 'admin']);
 
 if ((int) $stmt->fetchColumn() === 0) {
-    /**
-     * PASSWORD_DEFAULT nutzt aktuell bcrypt und wechselt bei PHP-Updates automatisch auf stärkere Verfahren.
-     */
+    // PASSWORD_DEFAULT nutzt aktuell bcrypt
     $hash = password_hash('admin123', PASSWORD_DEFAULT);
 
     $db->prepare(

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * User-Model.
+ * Modell für Nutzer.
  * Kapselt alle Datenbankoperationen auf der users-Tabelle.
  */
 
@@ -16,6 +16,7 @@ class User
         return $user ?: null;
     }
 
+    /** Prüft, ob Nutzername oder E-Mail bereits vergeben ist. */
     public static function existsByUsernameOrEmail(string $username, string $email): bool
     {
         $db = getDB();
@@ -42,21 +43,19 @@ class User
     }
 
     // =========================================================================
-    //  Admin-Funktionen (Phase 15)
+    //  Admin-Funktionen
     // =========================================================================
 
-    /**
-     * Gibt alle Nutzer ohne password_hash zurück.
-     * Der Hash wird bewusst weggelassen. Er wird nur beim Login für password_verify() gebraucht.
-     */
+    /** Gibt alle Nutzer ohne password_hash zurück. */
     public static function getAll(): array
     {
         $db = getDB();
-        $stmt = $db->query(
+        $stmt = $db->prepare(
             'SELECT id, username, email, role, created_at
              FROM users
              ORDER BY created_at ASC'
         );
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -73,11 +72,7 @@ class User
         return $user ?: null;
     }
 
-    /**
-     * Ändert die Rolle eines Nutzers mit PHP-seitiger Whitelist-Prüfung.
-     * Die Rollen werden zusätzlich in PHP validiert, obwohl das Datenbankschema bereits einen CHECK-Constraint enthält.
-     * Diese doppelte Absicherung liefert bei ungültiger Eingabe eine verständliche Fehlermeldung statt einer generischen Datenbankausnahme.
-     */
+    /** Ändert die Rolle. Prüft vorher in PHP, ob der Wert gültig ist. */
     public static function updateRole(int $userId, string $newRole): bool
     {
         $allowed = ['user', 'moderator', 'admin'];
@@ -93,6 +88,7 @@ class User
         return true;
     }
 
+    /** Löscht einen Nutzer samt Themen und Beiträgen (CASCADE). */
     public static function delete(int $userId): void
     {
         $db = getDB();

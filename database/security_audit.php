@@ -1,11 +1,6 @@
 <?php
 /**
- * Automatisiertes Sicherheits-Audit.
- *
- * Prüft die korrekte Implementierung aller Sicherheitsmaßnahmen
- * auf Code-Ebene, ohne den laufenden Webserver zu benötigen.
- * Ergänzend dazu sind manuelle Browser-Tests erforderlich
- * (siehe Checkliste in Schritt 2).
+ * Automatisierter Sicherheitstest. Kein laufender Webserver nötig.
  *
  * Ausführung: php database/security_audit.php
  */
@@ -28,7 +23,7 @@ function audit(string $label, bool $condition, string $detail = ''): void
         echo "  [PASS] $label\n";
         $passed++;
     } else {
-        echo "  [FAIL] $label" . ($detail ? " — $detail" : '') . "\n";
+        echo "  [FAIL] $label" . ($detail ? " - $detail" : '') . "\n";
         $failed++;
     }
 }
@@ -55,7 +50,7 @@ foreach ($maliciousInputs as $input) {
         audit(
             "Prepared Statement blockt: " . substr($input, 0, 25),
             $result === false,
-            'Unerwarteter Treffer — Injection möglich!'
+            'Unerwarteter Treffer - Injection möglich!'
         );
     } catch (Exception $e) {
         audit("Prepared Statement bei: " . substr($input, 0, 25), false, $e->getMessage());
@@ -72,11 +67,11 @@ audit(
 );
 
 // =========================================================================
-//  2. XSS-Schutz (Output-Encoding)
+//  2. XSS-Schutz (Ausgabe-Kodierung)
 // =========================================================================
 echo "\n=== 2. XSS-Schutz (hsc-Funktion) ===\n";
 
-// header.php definiert hsc(), gibt aber auch HTML aus — Ausgabe unterdrücken
+// header.php definiert hsc(), gibt aber auch HTML aus. ob_start() unterdrückt diese Ausgabe.
 ob_start();
 require_once __DIR__ . '/../app/views/layout/header.php';
 ob_end_clean();
@@ -139,13 +134,7 @@ audit('Gültiges Token wird akzeptiert', validateCsrfToken($token));
 audit('Leeres Token wird abgelehnt', !validateCsrfToken(''));
 audit('Falsches Token wird abgelehnt', !validateCsrfToken('abc123'));
 
-/**
- * Timing-Angriff-Resistenz: hash_equals() vergleicht in konstanter
- * Zeit — validateCsrfToken() nutzt diese Funktion intern.
- * Ein automatischer Test hierfür ist nicht aussagekräftig (Jitter
- * überlagert den Effekt), daher wird die Implementierung per
- * Code-Review verifiziert (siehe Checkliste Punkt 4c).
- */
+// hash_equals() nutzt Timing-sicheren Vergleich (nicht automatisch testbar)
 audit(
     'Token ist session-gebunden',
     isset($_SESSION['csrf_token']) && $_SESSION['csrf_token'] === $token
@@ -166,17 +155,17 @@ audit(
 );
 
 // =========================================================================
-//  6. Foreign-Key-Enforcement
+//  6. Löschkonzept (Foreign Keys mit ON DELETE CASCADE)
 // =========================================================================
-echo "\n=== 6. SQLite Foreign Keys ===\n";
+echo "\n=== 6. Löschkonzept ===\n";
 
 $fkStatus = $db->query('PRAGMA foreign_keys')->fetchColumn();
 audit('PRAGMA foreign_keys = ON', (int) $fkStatus === 1);
 
 // =========================================================================
-//  7. Rollenprüfung (RBAC-Hierarchie)
+//  7. Rollenprüfung
 // =========================================================================
-echo "\n=== 7. RBAC-Hierarchie ===\n";
+echo "\n=== 7. Rollenprüfung ===\n";
 
 $_SESSION['user'] = ['id' => 999, 'username' => 'test', 'email' => 'test@test.de', 'role' => 'user'];
 audit('User hat Rolle user', hasRole('user'));
@@ -194,7 +183,7 @@ audit('Admin hat Rolle moderator (Hierarchie)', hasRole('moderator'));
 audit('Admin hat Rolle admin', hasRole('admin'));
 
 unset($_SESSION['user']);
-audit('Kein User → hasRole() gibt false', !hasRole('user'));
+audit('Kein User: hasRole() gibt false', !hasRole('user'));
 
 // =========================================================================
 //  8. Logging
@@ -213,7 +202,7 @@ audit('Logeintrag enthält IP-Feld', str_contains($logContent, 'ip='));
 // =========================================================================
 //  9. Datenbank-Constraint-Integrität
 // =========================================================================
-echo "\n=== 9. Schema-Constraints ===\n";
+echo "\n=== 9. Datenbankschema-Prüfung ===\n";
 
 try {
     $db->exec("INSERT INTO users (username, email, password_hash, role) VALUES ('_audit_test', '_audit@test.de', 'hash', 'invalidrole')");
@@ -241,7 +230,7 @@ echo "Ergebnis: $passed PASSED, $failed FAILED\n";
 echo str_repeat('=', 50) . "\n\n";
 
 if ($failed > 0) {
-    echo "⚠️  $failed Test(s) fehlgeschlagen — bitte prüfen!\n";
+    echo "⚠️  $failed Test(s) fehlgeschlagen. Bitte prüfen!\n";
 } else {
     echo "✅ Alle Sicherheitsprüfungen bestanden.\n";
 }

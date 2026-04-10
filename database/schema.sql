@@ -1,8 +1,14 @@
 -- =============================================================================
--- Drei Tabellen (users, topics, posts).
--- AUTOINCREMENT verhindert die Wiederverwendung gelöschter IDs.
--- CHECK auf role begrenzt die Werte auf user, moderator, admin.
--- ON DELETE CASCADE entfernt abhängige Datensätze automatisch.
+-- Datenbankschema des Forum-MVP mit drei Tabellen.
+-- AUTOINCREMENT stellt sicher, dass URLs und Verweise nach dem Löschen
+-- eines Datensatzes gültig bleiben.
+--
+-- CHECK(role) validiert die Rolle auf DB-Ebene als zweite Sicherheitsschicht
+-- neben der PHP-Prüfung in User::updateRole().
+--
+-- ON DELETE CASCADE verhindert verwaiste Beiträge und Themen beim Löschen
+-- eines Nutzers, ohne dass die Anwendungslogik jeden Datensatz einzeln
+-- entfernen muss.
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS users (

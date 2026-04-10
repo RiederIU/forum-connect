@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Gibt pro Request exakt eine PDO-Instanz zurück (Singleton)
+ * Gibt pro Seitenaufruf genau eine Datenbankverbindung zurück.
  * Bei SQLite liefert lastInsertId() nur auf derselben Verbindung korrekte Werte.
  */
 
@@ -16,10 +16,7 @@ function getDB(): PDO
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-        /**
-         * Ohne dieses PRAGMA ignoriert SQLite alle ON DELETE CASCADE Regeln.
-         * $pdo->exec('PRAGMA foreign_keys = ON');
-        */
+        // Ohne dieses PRAGMA ignoriert SQLite alle ON DELETE CASCADE Regeln.
         $pdo->exec('PRAGMA foreign_keys = ON');
     }
 
