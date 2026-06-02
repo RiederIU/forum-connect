@@ -1,4 +1,1 @@
-# Erzwingt einheitliche LF-Zeilenenden im Repository und beim Checkout,
-# unabhängig von der lokalen core.autocrlf-Einstellung. So liefert die lokale
-# Prüfung mit phpcs unter Windows dasselbe Ergebnis wie die Linux-CI.
 * text=auto eol=lf
