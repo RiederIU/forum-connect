@@ -49,7 +49,7 @@ Der Container legt die SQLite-Datenbank beim Start automatisch an (Schema und Ad
 | Containerisierung | Docker (Basis-Image `php:8.2-apache`) |
 | Container-Registry | Docker Hub |
 | Laufzeitumgebung | Apache im Container (DocumentRoot `public/`, Port 80), lokal alternativ XAMPP |
-| CI/CD | GitHub Actions, sechsstufige Pipeline (Runner `ubuntu-latest`) |
+| CI/CD | GitHub Actions, fünfstufige Pipeline (Runner `ubuntu-latest`) |
 | Deployment-Strategie | Mit Commit-SHA versehene Images plus verschiebbare Tags `:staging` und `:production`, HTTP-200-Smoke-Test |
 | Versionierung | Git + GitHub |
 
@@ -57,8 +57,10 @@ Der Container legt die SQLite-Datenbank beim Start automatisch an (Schema und Ad
 
 ```
 forum-connect/
-├── .github/workflows/
-│   └── ci-cd.yml                CI/CD-Pipeline (fünf Stufen)
+├── .github/
+│   ├── workflows/
+│   │   └── ci-cd.yml            CI/CD-Pipeline (fünf Stufen)
+│   └── dependabot.yml           Automatische Abhängigkeitsaktualisierungen
 ├── public/
 │   ├── index.php                Front-Controller
 │   ├── health.php               Health-Endpoint für Smoke-Test und HEALTHCHECK
@@ -82,10 +84,14 @@ forum-connect/
 │   └── logging.php              Audit-Logging
 ├── tests/                       PHPUnit-Tests (Unit und DB-Komponente)
 ├── Dockerfile                   Container-Image (php:8.2-apache)
+├── .dockerignore                Vom Build-Kontext ausgeschlossene Dateien
 ├── composer.json                Abhängigkeiten und Autoload
+├── composer.lock                Festgeschriebene Abhängigkeitsversionen
 ├── phpstan.neon                 PHPStan-Konfiguration (Level 6)
 ├── .phpcs.xml                   PHP_CodeSniffer-Konfiguration (PSR-12)
 ├── phpunit.xml                  PHPUnit-Konfiguration
+├── .gitattributes               Git-Attribute für Zeilenenden und Export
+├── .gitignore                   Von der Versionierung ausgeschlossene Dateien
 └── README.md
 ```
 
