@@ -114,15 +114,15 @@ forum-connect ist ein Diskussionsforum als Minimum Viable Product. Funktionsumfa
 
 ### Test-Zugangsdaten
 
-Die Seed-Daten (`database/init.php` und `database/seed.php`) legen folgende Konten ausschließlich für die lokale Entwicklungsumgebung an. Die Passwörter stammen aus den Umgebungsvariablen `SEED_ADMIN_PASSWORD` und `SEED_USER_PASSWORD` (siehe `.env.example`). Ohne gesetzte Variablen gilt der Standardwert `changeme`.
+Die Seed-Daten (`database/init.php` und `database/seed.php`) legen folgende Konten an. Die Zugangsdaten gelten ausschließlich für die lokale Entwicklungsumgebung.
 
 | Benutzername | E-Mail | Passwort | Rolle |
 |--------------|--------|----------|-------|
-| admin | admin@forum.local | `$SEED_ADMIN_PASSWORD` (Standard `changeme`) | Admin |
-| moderator | mod@forum.local | `$SEED_USER_PASSWORD` (Standard `changeme`) | Moderator |
-| alice | alice@forum.local | `$SEED_USER_PASSWORD` (Standard `changeme`) | User |
-| bob | bob@forum.local | `$SEED_USER_PASSWORD` (Standard `changeme`) | User |
-| charlie | charlie@forum.local | `$SEED_USER_PASSWORD` (Standard `changeme`) | User |
+| admin | admin@forum.local | `admin123` | Admin |
+| moderator | mod@forum.local | `test1234` | Moderator |
+| alice | alice@forum.local | `test1234` | User |
+| bob | bob@forum.local | `test1234` | User |
+| charlie | charlie@forum.local | `test1234` | User |
 
 ## Lokale Entwicklung mit XAMPP
 

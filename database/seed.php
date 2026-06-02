@@ -4,7 +4,7 @@
  * Bestehende Daten werden vorher gelöscht, damit das Skript mehrfach ausführbar ist.
  *
  * Ausführung: php database/seed.php
- * Alle Testnutzer verwenden das Passwort aus SEED_USER_PASSWORD (Standardwert changeme).
+ * Alle Testnutzer verwenden das Passwort test1234.
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -37,9 +37,8 @@ $stmtUser = $db->prepare(
      VALUES (:username, :email, :password_hash, :role)'
 );
 
-// Passwort aus der Umgebung, kein Klartext-Literal im Quellcode. Einmal hashen,
-// da alle Testnutzer dasselbe Passwort teilen.
-$userPassword = getenv('SEED_USER_PASSWORD') ?: 'changeme';
+// Lokales Entwicklungs-Passwort. Einmal hashen, da alle Testnutzer dasselbe Passwort teilen.
+$userPassword = 'test1234';
 $userHash = password_hash($userPassword, PASSWORD_DEFAULT);
 
 foreach ($testUsers as [$username, $email, $role]) {
@@ -200,7 +199,7 @@ echo "Nutzer:  " . count($db->query('SELECT id FROM users')->fetchAll()) . "\n";
 echo "Themen:  " . count($topicIds) . "\n";
 echo "Posts:   $totalPosts\n";
 
-echo "\nZugangsdaten (Passwörter aus SEED_ADMIN_PASSWORD / SEED_USER_PASSWORD):\n";
+echo "\nZugangsdaten (admin: admin123, übrige Konten: test1234):\n";
 echo "  admin     / admin@forum.local\n";
 echo "  moderator / mod@forum.local\n";
 echo "  alice     / alice@forum.local\n";
