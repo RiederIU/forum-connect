@@ -1,20 +1,11 @@
 parameters:
-    # Level 6 prüft die Wertetypen von Arrays. Die Rückgabetypen der Modelle und
-    # Helfer sind dafür per PHPDoc-Array-Shapes präzisiert. Die höheren Stufen 7 bis 9
-    # würden Null-Prüfungen und PDO-Typ-Refactorings am stabilen MVP-Code erzwingen und
-    # sind als Verbesserungspotenzial bewusst nicht Teil des Proof of Concept.
     level: 6
     paths:
         - app
         - helpers
-    # Liefert die in den Controllern genutzten Konstanten (PER_PAGE, MIN_PASS,
-    # MIN_TITLE, MIN_CONTENT) ohne Seiteneffekte, damit PHPStan sie nicht als
-    # "constant not found" meldet. Die globalen Helfer-Funktionen werden über
-    # paths statisch erkannt und brauchen hier keinen Eintrag.
+    # Liefert die Controller-Konstanten, sonst meldet PHPStan sie als "constant not found". Die Helfer aus paths brauchen hier keinen Eintrag.
     bootstrapFiles:
         - config/database.php
         - config/app.php
-    # Views sind gemischte HTML/PHP-Templates mit Variablen aus dem einbindenden
-    # Geltungsbereich, die statisch nicht auflösbar sind und sonst Falschmeldungen erzeugen.
     excludePaths:
         - app/views/*
