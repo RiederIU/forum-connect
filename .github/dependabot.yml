@@ -1,0 +1,40 @@
+version: 2
+updates:
+  # PHP-Abhängigkeiten aus composer.json und composer.lock.
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+    ignore:
+      # Major-Versionen erfordern eine Migration und bleiben dem PoC bewusst erspart.
+      # Die Regel greift hier ausschließlich für die drei Entwicklungswerkzeuge phpstan,
+      # php_codesniffer und phpunit, weil composer.json keine produktiven
+      # Laufzeitabhängigkeiten enthält. Minor-, Patch- und Sicherheitsaktualisierungen
+      # kommen weiterhin als Pull Request.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions. Hält die auf Commit-SHA fixierten Actions über Pull Requests aktuell.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+
+  # Basis-Image im Dockerfile. Hält den Digest-Pin aktuell, ohne die Reproduzierbarkeit aufzugeben.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: docker
+    ignore:
+      # Auf PHP 8.2 bleiben, da die Laufzeit darauf festgelegt ist. Dependabot
+      # aktualisiert nur den Digest des 8.2-apache-Images, keine Minor- oder
+      # Major-Sprünge wie 8.3 oder 8.5.
+      - dependency-name: "php"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
