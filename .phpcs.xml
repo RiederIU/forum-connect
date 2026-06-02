@@ -3,21 +3,14 @@
     <description>PSR-12-Codestil für den Logik-Code (Controller, Models, Helfer) und die Tests.</description>
 
     <rule ref="PSR12">
-        <!-- Die Anwendung nutzt bewusst keine Namespaces (klassenloses MVP mit classmap-Autoloading
-             statt PSR-4). Die PSR-1-Pflicht zu Namespaces und die Trennung von require und
-             Klassendeklaration ergeben für diese Architektur keinen Sinn und erzeugen bei
-             jeder Klasse unvermeidbare Fehlschläge. Genau diese zwei Prüfungen werden
-             ausgeschlossen, alle übrigen PSR-12-Regeln bleiben aktiv. -->
+        <!-- Beide Sniffs sind im klassenlosen MVP mit classmap-Autoload unvermeidbar verletzt. -->
         <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
         <exclude name="PSR1.Files.SideEffects"/>
     </rule>
 
-    <!-- Geprüft werden Logik-Code und Testcode. Auch die Tests gehören zur gepflegten Codebasis. -->
     <file>app/</file>
     <file>helpers/</file>
     <file>tests/</file>
 
-    <!-- Views sind gemischte HTML/PHP-Templates und verletzen PSR-12 zwangsläufig
-         (lange Zeilen, mehrere PHP-Tags pro Zeile). Prüfung wäre reines Rauschen. -->
     <exclude-pattern>app/views/*</exclude-pattern>
 </ruleset>

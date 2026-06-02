@@ -9,8 +9,7 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-    <!-- Erfasst die Codeabdeckung für den Logik-Code. Views sind ausgenommen,
-         da sie gemischte HTML/PHP-Templates und nicht sinnvoll abdeckbar sind. -->
+    <!-- Views ausgenommen, da gemischte HTML/PHP-Templates nicht sinnvoll abdeckbar. -->
     <source>
         <include>
             <directory>app</directory>
@@ -21,8 +20,7 @@
         </exclude>
     </source>
     <php>
-        <!-- Setzt die Test-DB vor jeder PHP-Ausführung, damit die DB_PATH-Abfrage
-             beim Autoload sofort die In-Memory-DB nimmt und nie die echte forum.sqlite trifft. -->
+        <!-- Vor dem Autoload gesetzt, damit die DB_PATH-Abfrage die In-Memory-DB nimmt und nie forum.sqlite trifft. -->
         <env name="DB_PATH" value=":memory:"/>
     </php>
 </phpunit>

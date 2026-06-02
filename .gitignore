@@ -1,33 +1,25 @@
-# SQLite-Datenbankdateien und Rollback-Journal: enthalten personenbezogene
-# Laufzeitdaten (Nutzernamen, E-Mail-Adressen, Passwort-Hashes, Beitragsinhalte)
-# und sind daher von der Versionskontrolle auszuschließen (DSGVO).
-# Die Rekonstruktion erfolgt über schema.sql und seed.php.
+# Datenbankdateien (personenbezogene Laufzeitdaten, DSGVO)
 *.sqlite
 *.sqlite-journal
 *.db
 *.db-journal
 
-# Protokolldateien: enthalten personenbezogene Daten (IP-Adressen, Nutzernamen,
-# Zeitstempel sicherheitsrelevanter Ereignisse).
+# Protokolldateien
 *.log
 
-# Umgebungskonfiguration: potenzielle Zugangsdaten oder umgebungsspezifische
-# Parameter, präventiv ausgeschlossen.
+# Umgebungskonfiguration
 .env
 
-# IDE-Metadaten (PhpStorm, Visual Studio Code): entwicklerspezifisch,
-# keine Projektrelevanz.
+# IDE-Metadaten
 .idea/
 .vscode/
 
-# Betriebssystem-Metadaten (Windows): lokal erzeugt, keine Projektrelevanz.
+# Betriebssystem-Metadaten
 Thumbs.db
 Desktop.ini
 
-# Composer-Abhängigkeiten: über "composer install" aus composer.lock
-# reproduzierbar, daher nicht versioniert. composer.lock selbst wird bewusst
-# mit versioniert (fixiert die exakten Paketversionen) und ist hier NICHT eingetragen.
+# Composer-Abhängigkeiten
 /vendor/
 
-# PHPUnit-Ergebnis-Cache des letzten Laufs, lokales Laufzeit-Artefakt ohne Projektinhalt.
+# PHPUnit-Cache
 .phpunit.result.cache
