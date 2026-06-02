@@ -1,0 +1,160 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read   # minimale GITHUB_TOKEN-Rechte. Docker-Authentifizierung läuft über separate Secrets, kein Schreibzugriff nötig
+
+jobs:
+  # Stage 1: prüft Stil (phpcs) und Typen (phpstan), erstes Quality Gate vor Tests und Build
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc  # 2.37.1
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite, sqlite3
+      - run: composer install --no-progress --no-interaction
+      - run: vendor/bin/phpcs
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  # Stage 2: automatisierte Tests (Unit + DB-Komponente), zweites Quality Gate vor dem Build
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc  # 2.37.1
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite, sqlite3
+          coverage: pcov
+      - run: composer install --no-progress --no-interaction
+      - run: vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml
+      - name: Mindest-Coverage prüfen
+        run: |
+          php -r '
+            $x = simplexml_load_file("coverage.xml");
+            $m = $x->project->metrics;
+            $pct = ((int) $m["coveredstatements"]) / max(1, (int) $m["statements"]) * 100;
+            printf("Line-Coverage: %.2f%%\n", $pct);
+            if ($pct < 25.0) {
+                fwrite(STDERR, "Coverage unter der Mindestschwelle von 25 Prozent\n");
+                exit(1);
+            }
+          '
+
+  # Stage 3: baut genau ein auslieferbares Image, prüft es mit Trivy auf bekannte
+  # Schwachstellen und lädt es nur beim Push auf main hoch. Der SHA-Tag macht jeden
+  # Build eindeutig nachvollziehbar.
+  build:
+    needs: [lint, test]   # Quality Gate: Build startet nur, wenn Lint und Test grün sind
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Image bauen (prüft die Baubarkeit bei jedem Pull Request und Push)
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }} .
+      # Shift-Left-Sicherheitsprüfung am soeben gebauten Image, kein zweiter Build.
+      # ignore-unfixed blendet CVEs ohne verfügbaren Patch aus, gemeldet werden also nur
+      # behebbare CRITICAL- und HIGH-Befunde. Im PoC bewusst nicht blockierend (exit-code 0),
+      # damit geerbte Basis-Image-Befunde den Lauf nicht abbrechen, sondern im Log sichtbar werden.
+      - name: Trivy-Scan auf CVEs (CRITICAL und HIGH, nicht blockierend)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '0'
+      - name: An Docker Hub anmelden (nur beim Push auf main, nicht bei Pull Requests)
+        if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Image hochladen (nur beim Push auf main, nicht bei Pull Requests)
+        if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+
+  # Stage 4: prüft den Build aus Stage 3 per Smoke-Test und stellt ihn erst nach bestandenem Test unter dem Tag :staging bereit
+  deploy-staging:
+    needs: [build]
+    # nur bei Push auf main. Eine Prüfung über github.event_name allein reicht nicht, da auch Feature-Branches Push-Events auslösen
+    if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Geprüftes SHA-Image ziehen (noch nicht als :staging markieren)
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+      - name: Smoke-Test Staging vor dem Bereitstellen (Health-Endpoint + Startseite)
+        run: |
+          docker run -d --name forum-connect-staging -p 8080:80 \
+            -e APP_ENV=staging \
+            ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+          ok=0
+          for i in $(seq 1 10); do
+            if curl -fsS http://localhost:8080/health.php | grep -q '"status":"ok"'; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" -ne 1 ]; then echo "Staging-Smoke-Test fehlgeschlagen (Health-Endpoint nicht ok), Bereitstellung wird übersprungen"; exit 1; fi
+          curl -fsS http://localhost:8080/ | grep -q 'Forumsübersicht' \
+            || { echo "Staging-Smoke-Test fehlgeschlagen (Startseite ohne erwarteten Inhalt)"; exit 1; }
+          echo "Staging-Smoke-Test bestanden: Health-Endpoint ok und Startseite gerendert"
+      - name: Unter :staging veröffentlichen (erst nach bestandenem Smoke-Test)
+        run: |
+          docker tag  ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }} \
+                      ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:staging
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:staging
+      - name: Staging-Protokoll bei Fehler
+        if: failure()
+        run: docker logs forum-connect-staging
+      - name: Staging aufräumen
+        if: always()
+        run: docker stop forum-connect-staging && docker rm forum-connect-staging
+
+  # Stage 5: prüft denselben Build nach manueller Genehmigung per Smoke-Test und stellt ihn erst nach bestandenem Test unter dem Tag :production bereit
+  deploy-production:
+    needs: [deploy-staging]
+    # if-Bedingung muss auf beiden Deploy-Jobs stehen, denn needs allein sorgt nicht dafür, dass der zweite Job ebenfalls übersprungen wird
+    if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Geprüftes SHA-Image ziehen (noch nicht als :production markieren)
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+      - name: Smoke-Test Production vor der Veröffentlichung (Health-Endpoint + Startseite)
+        run: |
+          docker run -d --name forum-connect-production -p 8081:80 \
+            -e APP_ENV=production \
+            ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }}
+          ok=0
+          for i in $(seq 1 10); do
+            if curl -fsS http://localhost:8081/health.php | grep -q '"status":"ok"'; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" -ne 1 ]; then echo "Production-Smoke-Test fehlgeschlagen (Health-Endpoint nicht ok), Veröffentlichung wird übersprungen"; exit 1; fi
+          curl -fsS http://localhost:8081/ | grep -q 'Forumsübersicht' \
+            || { echo "Production-Smoke-Test fehlgeschlagen (Startseite ohne erwarteten Inhalt)"; exit 1; }
+          echo "Production-Smoke-Test bestanden: Health-Endpoint ok und Startseite gerendert"
+      - name: Nach :production veröffentlichen (erst nach bestandenem Smoke-Test)
+        run: |
+          docker tag  ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:${{ github.sha }} \
+                      ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:production
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/forum-connect:production
+      - name: Production-Protokoll bei Fehler
+        if: failure()
+        run: docker logs forum-connect-production
+      - name: Production aufräumen
+        if: always()
+        run: docker stop forum-connect-production && docker rm forum-connect-production
