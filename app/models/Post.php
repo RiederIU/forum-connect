@@ -7,6 +7,7 @@
 
 class Post
 {
+    /** @return array{posts: list<array<string, mixed>>, total: int} */
     public static function getByTopic(int $topicId, int $page, int $perPage): array
     {
         $db = getDB();
@@ -28,8 +29,8 @@ class Post
              LIMIT :limit OFFSET :offset'
         );
         $stmtData->bindValue(':topic_id', $topicId, PDO::PARAM_INT);
-        $stmtData->bindValue(':limit',    $perPage, PDO::PARAM_INT);
-        $stmtData->bindValue(':offset',   $offset,  PDO::PARAM_INT);
+        $stmtData->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmtData->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmtData->execute();
 
         return [
@@ -38,6 +39,7 @@ class Post
         ];
     }
 
+    /** @return array<string, mixed>|null */
     public static function getById(int $id): ?array
     {
         $db = getDB();

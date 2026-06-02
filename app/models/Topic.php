@@ -10,6 +10,8 @@ class Topic
     /**
      * Liefert Themen seitenweise. Optionale Suche über Titel und Beiträge.
      * COUNT(DISTINCT) verhindert Doppelzählung durch den LEFT JOIN.
+     *
+     * @return array{topics: list<array<string, mixed>>, total: int}
      */
     public static function getAll(int $page, int $perPage, ?string $search = null): array
     {
@@ -47,8 +49,8 @@ class Topic
         foreach ($params as $key => $value) {
             $stmtData->bindValue($key, $value);
         }
-        $stmtData->bindValue(':limit',  $perPage, PDO::PARAM_INT);
-        $stmtData->bindValue(':offset', $offset,  PDO::PARAM_INT);
+        $stmtData->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmtData->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmtData->execute();
 
         return [
@@ -57,6 +59,7 @@ class Topic
         ];
     }
 
+    /** @return array<string, mixed>|null */
     public static function getById(int $id): ?array
     {
         $db = getDB();

@@ -1,0 +1,27 @@
+{
+    "name": "rieder/forum-connect",
+    "description": "Webforum MVP mit CI/CD-Pipeline (Proof of Concept).",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "ext-pdo_sqlite": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "squizlabs/php_codesniffer": "^3.0",
+        "phpstan/phpstan": "^1.0"
+    },
+    "autoload": {
+        "files": [
+            "helpers/session.php",
+            "helpers/auth.php",
+            "helpers/logging.php",
+            "config/app.php",
+            "config/database.php"
+        ],
+        "classmap": [
+            "app/models/",
+            "app/controllers/"
+        ]
+    }
+}

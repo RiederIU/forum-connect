@@ -1,0 +1,11 @@
+parameters:
+    level: 6
+    paths:
+        - app
+        - helpers
+    # Liefert die Controller-Konstanten, sonst meldet PHPStan sie als "constant not found". Die Helfer aus paths brauchen hier keinen Eintrag.
+    bootstrapFiles:
+        - config/database.php
+        - config/app.php
+    excludePaths:
+        - app/views/*

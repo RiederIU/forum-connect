@@ -5,7 +5,11 @@
  * Bei SQLite liefert lastInsertId() nur auf derselben Verbindung korrekte Werte.
  */
 
-define('DB_PATH', __DIR__ . '/../database/forum.sqlite');
+// Diese Abfrage erlaubt das Vorbelegen von DB_PATH (z. B. ':memory:' im Test) über
+// die Umgebung. Ohne Vorbelegung bleibt der Standardpfad der Anwendung.
+if (!defined('DB_PATH')) {
+    define('DB_PATH', getenv('DB_PATH') ?: __DIR__ . '/../database/forum.sqlite');
+}
 
 function getDB(): PDO
 {

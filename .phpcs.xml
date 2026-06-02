@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="forum-connect">
+    <description>PSR-12-Codestil für den Logik-Code (Controller, Models, Helfer) und die Tests.</description>
+
+    <rule ref="PSR12">
+        <!-- Beide Sniffs sind im klassenlosen MVP mit classmap-Autoload unvermeidbar verletzt. -->
+        <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
+        <exclude name="PSR1.Files.SideEffects"/>
+    </rule>
+
+    <file>app/</file>
+    <file>helpers/</file>
+    <file>tests/</file>
+
+    <exclude-pattern>app/views/*</exclude-pattern>
+</ruleset>

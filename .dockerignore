@@ -1,0 +1,43 @@
+# Versionsverwaltung und CI-Konfiguration gehören nicht ins Laufzeit-Image.
+.git
+.gitattributes
+.gitignore
+.github
+
+# Test- und Qualitätswerkzeuge laufen in der Pipeline, nicht im Container.
+tests
+phpunit.xml
+phpstan.neon
+.phpcs.xml
+.phpunit.result.cache
+
+# Composer-Manifest und Abhängigkeiten werden im Image nicht gebraucht, da das
+# Dockerfile kein composer install ausführt und die Anwendung ihre Dateien per
+# require_once selbst lädt.
+composer.json
+composer.lock
+vendor
+
+# Entwicklungs- und Prüfskripte, kein Laufzeitbestandteil und gehören nicht ins Image.
+database/perftest.php
+database/security_audit.php
+
+# Dokumentation, lokale Umgebungsdateien, Editor- und Betriebssystem-Metadaten.
+README.md
+.env
+.env.example
+.idea
+.vscode
+Thumbs.db
+Desktop.ini
+
+# Lokale Datenbank- und Protokolldateien. Die DB wird zur Laufzeit von init.php neu erzeugt.
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+*.log
+
+# Die Build-Dateien selbst müssen nicht ins Image kopiert werden.
+Dockerfile
+.dockerignore

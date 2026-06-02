@@ -4,7 +4,7 @@
  * Bestehende Daten werden vorher gelöscht, damit das Skript mehrfach ausführbar ist.
  *
  * Ausführung: php database/seed.php
- * Alle Testnutzer verwenden das Passwort 'test1234'.
+ * Alle Testnutzer verwenden das Passwort test1234.
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -37,11 +37,15 @@ $stmtUser = $db->prepare(
      VALUES (:username, :email, :password_hash, :role)'
 );
 
+// Lokales Entwicklungs-Passwort. Einmal hashen, da alle Testnutzer dasselbe Passwort teilen.
+$userPassword = 'test1234';
+$userHash = password_hash($userPassword, PASSWORD_DEFAULT);
+
 foreach ($testUsers as [$username, $email, $role]) {
     $stmtUser->execute([
         ':username'      => $username,
         ':email'         => $email,
-        ':password_hash' => password_hash('test1234', PASSWORD_DEFAULT),
+        ':password_hash' => $userHash,
         ':role'          => $role
     ]);
 }
@@ -195,9 +199,9 @@ echo "Nutzer:  " . count($db->query('SELECT id FROM users')->fetchAll()) . "\n";
 echo "Themen:  " . count($topicIds) . "\n";
 echo "Posts:   $totalPosts\n";
 
-echo "\nZugangsdaten:\n";
-echo "  admin     / admin@forum.local     / admin123   (Admin)\n";
-echo "  moderator / mod@forum.local       / test1234   (Moderator)\n";
-echo "  alice     / alice@forum.local     / test1234   (User)\n";
-echo "  bob       / bob@forum.local       / test1234   (User)\n";
-echo "  charlie   / charlie@forum.local   / test1234   (User)\n";
+echo "\nZugangsdaten (admin: admin123, übrige Konten: test1234):\n";
+echo "  admin     / admin@forum.local\n";
+echo "  moderator / mod@forum.local\n";
+echo "  alice     / alice@forum.local\n";
+echo "  bob       / bob@forum.local\n";
+echo "  charlie   / charlie@forum.local\n";

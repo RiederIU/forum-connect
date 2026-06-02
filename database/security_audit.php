@@ -105,17 +105,20 @@ echo "\n=== 3. Passwort-Hashing ===\n";
 $stmt = $db->query("SELECT password_hash FROM users WHERE username = 'admin'");
 $hash = $stmt->fetchColumn();
 
+// Erwartetes Admin-Passwort wie in init.php (lokaler Standard).
+$adminPassword = 'admin123';
+
 audit(
     'Admin-Passwort ist bcrypt-Hash',
     str_starts_with($hash, '$2y$')
 );
 audit(
     'Klartext-Passwort nicht gespeichert',
-    $hash !== 'admin123'
+    $hash !== $adminPassword
 );
 audit(
     'password_verify() funktioniert korrekt',
-    password_verify('admin123', $hash)
+    password_verify($adminPassword, $hash)
 );
 audit(
     'Falsches Passwort wird abgelehnt',

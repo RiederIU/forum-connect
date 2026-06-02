@@ -7,6 +7,7 @@
 
 class User
 {
+    /** @return array<string, mixed>|null */
     public static function findByEmail(string $email): ?array
     {
         $db = getDB();
@@ -46,7 +47,11 @@ class User
     //  Admin-Funktionen
     // =========================================================================
 
-    /** Gibt alle Nutzer ohne password_hash zurück. */
+    /**
+     * Gibt alle Nutzer ohne password_hash zurück.
+     *
+     * @return list<array<string, mixed>>
+     */
     public static function getAll(): array
     {
         $db = getDB();
@@ -59,6 +64,7 @@ class User
         return $stmt->fetchAll();
     }
 
+    /** @return array<string, mixed>|null */
     public static function getById(int $id): ?array
     {
         $db = getDB();

@@ -10,6 +10,7 @@ function isLoggedIn(): bool
     return isset($_SESSION['user']);
 }
 
+/** @return array<string, mixed>|null */
 function currentUser(): ?array
 {
     return $_SESSION['user'] ?? null;

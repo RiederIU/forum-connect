@@ -16,8 +16,9 @@ $stmt = $db->prepare('SELECT COUNT(*) FROM users WHERE role = :role');
 $stmt->execute([':role' => 'admin']);
 
 if ((int) $stmt->fetchColumn() === 0) {
-    // PASSWORD_DEFAULT nutzt aktuell bcrypt
-    $hash = password_hash('admin123', PASSWORD_DEFAULT);
+    // Lokales Entwicklungs-Passwort. PASSWORD_DEFAULT nutzt bcrypt.
+    $adminPassword = 'admin123';
+    $hash = password_hash($adminPassword, PASSWORD_DEFAULT);
 
     $db->prepare(
         'INSERT INTO users (username, email, password_hash, role)
@@ -29,7 +30,7 @@ if ((int) $stmt->fetchColumn() === 0) {
         ':role'          => 'admin'
     ]);
 
-    echo "Admin-Nutzer angelegt (admin@forum.local / admin123)\n";
+    echo "Admin-Nutzer angelegt (admin@forum.local)\n";
 }
 
 echo "Datenbank initialisiert.\n";
