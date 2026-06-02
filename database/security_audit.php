@@ -105,9 +105,8 @@ echo "\n=== 3. Passwort-Hashing ===\n";
 $stmt = $db->query("SELECT password_hash FROM users WHERE username = 'admin'");
 $hash = $stmt->fetchColumn();
 
-// Erwartetes Admin-Passwort aus derselben Umgebungsvariable wie init.php, damit das
-// Audit unabhängig vom konkreten Wert läuft und kein Klartext-Literal nötig ist.
-$adminPassword = getenv('SEED_ADMIN_PASSWORD') ?: 'changeme';
+// Erwartetes Admin-Passwort wie in init.php (lokaler Standard).
+$adminPassword = 'admin123';
 
 audit(
     'Admin-Passwort ist bcrypt-Hash',
