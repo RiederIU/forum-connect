@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="default">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <!-- Erfasst die Codeabdeckung für den Logik-Code. Views sind ausgenommen,
+         da sie gemischte HTML/PHP-Templates und nicht sinnvoll abdeckbar sind. -->
+    <source>
+        <include>
+            <directory>app</directory>
+            <directory>helpers</directory>
+        </include>
+        <exclude>
+            <directory>app/views</directory>
+        </exclude>
+    </source>
+    <php>
+        <!-- Setzt die Test-DB vor jeder PHP-Ausführung, damit die DB_PATH-Abfrage
+             beim Autoload sofort die In-Memory-DB nimmt und nie die echte forum.sqlite trifft. -->
+        <env name="DB_PATH" value=":memory:"/>
+    </php>
+</phpunit>
