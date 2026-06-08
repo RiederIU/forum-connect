@@ -2,13 +2,13 @@
 
 [![CI/CD](https://github.com/RiederIU/forum-connect/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/RiederIU/forum-connect/actions/workflows/ci-cd.yml)
 
-Webbasiertes Diskussionsforum (PHP) mit einer vollständigen CI/CD-Pipeline. Jede Änderung wird über GitHub Actions automatisch geprüft, getestet, als Docker-Image gebaut und nach Staging sowie nach manueller Freigabe nach Production ausgeliefert. Im Mittelpunkt dieses Repositorys steht die Automatisierung von Build, Test und Bereitstellung. Die Forenanwendung dient als realer Anwendungsfall der Pipeline.
+Webbasiertes Diskussionsforum (PHP) mit Registrierung, Themen und Beiträgen sowie einer vollständigen CI/CD-Pipeline. Jede Änderung wird über GitHub Actions automatisch geprüft, getestet, als Docker-Image gebaut und nach Staging sowie nach manueller Freigabe nach Production ausgeliefert. Im Mittelpunkt dieses Repositorys steht die Automatisierung von Build, Test und Bereitstellung.
 
 ## CI/CD-Pipeline
 
-Definiert in `.github/workflows/ci-cd.yml`. Die Pipeline läuft bei jedem Pull Request (Stufen 1 bis 3, ohne Upload und ohne Deployment) und bei jedem Merge auf `main` (alle fünf Stufen). Jede Stufe ist ein Quality Gate für die nächste.
+Definiert in `.github/workflows/ci-cd.yml`. Die Pipeline läuft bei jedem Pull Request (Stufen 1 bis 3, ohne Upload und ohne Deployment) und bei jedem Merge auf `main` (alle fünf Stufen). Eine Änderung muss jede Stufe bestehen, bevor sie in Produktion gelangt.
 
-1. **Lint** prüft den Codestil mit PHP_CodeSniffer (PSR-12) und führt die statische Analyse mit PHPStan (Level 6) aus. Die Stufen 7 bis 9 wurden bewusst nicht gewählt, weil sie Refactorings am bereits fertig implementierten Prototyp erzwängen.
+1. **Lint** prüft den Codestil mit PHP_CodeSniffer (PSR-12) und führt die statische Analyse mit PHPStan (Level 6) aus.
 2. **Test** führt die automatisierten PHPUnit-Tests gegen eine In-Memory-SQLite-Datenbank aus und prüft die ermittelte Line-Coverage gegen eine Mindestschwelle (Coverage-Gate).
 3. **Build** baut genau ein auslieferbares Docker-Image, prüft es im selben Schritt mit Trivy auf bekannte Schwachstellen (CRITICAL und HIGH, nicht blockierend, Befunde nur im Log) und lädt es erst bei einem Merge auf `main` mit dem Commit-SHA als Tag nach Docker Hub hoch.
 4. **Deploy Staging** zieht das geprüfte SHA-Image, prüft es per HTTP-Smoke-Test und veröffentlicht es erst nach bestandenem Test unter dem Tag `:staging` (automatisch nach jedem Merge auf `main`).
@@ -39,7 +39,7 @@ Der Container legt die SQLite-Datenbank beim Start automatisch an (Schema und Ad
 | Schicht | Technologie |
 |---------|-------------|
 | Backend | PHP >= 8.2 (ohne Framework) |
-| Frontend | HTML5, CSS3, natives JavaScript |
+| Frontend | HTML5, CSS3, reines JavaScript |
 | Datenbank | SQLite (Zugriff über PDO mit Prepared Statements) |
 | Architektur | Model-View-Controller (MVC), Front-Controller-Routing |
 | Sicherheit | bcrypt-Hashing, CSRF-Token, Output-Escaping, rollenbasierte Zugriffskontrolle |
@@ -106,7 +106,7 @@ vendor/bin/phpstan analyse        # statische Analyse (Level 6)
 vendor/bin/phpunit --testdox      # automatisierte Tests
 ```
 
-Zusätzlich enthält die Anwendung ein Sicherheits-Audit-Skript (`database/security_audit.php`) und einen Performancetest (`database/perftest.php`).
+Zusätzlich lassen sich ein Sicherheits-Audit (`php database/security_audit.php`) und ein Performancetest (`php database/perftest.php`) lokal ausführen.
 
 ## Die Anwendung
 
@@ -120,7 +120,7 @@ forum-connect ist ein Diskussionsforum als Minimum Viable Product. Funktionsumfa
 
 ### Test-Zugangsdaten
 
-Die Seed-Daten (`database/init.php` und `database/seed.php`) legen folgende Konten an. Die Zugangsdaten gelten ausschließlich für die lokale Entwicklungsumgebung.
+Der Schnellstart mit Docker führt nur `database/init.php` aus und legt damit allein das Konto `admin` an. Die übrigen vier Konten erzeugt `database/seed.php`, das im XAMPP-Ablauf mitläuft, im Container dagegen nicht automatisch. Die Zugangsdaten gelten ausschließlich für die lokale Entwicklungsumgebung.
 
 | Benutzername | E-Mail | Passwort | Rolle |
 |--------------|--------|----------|-------|
