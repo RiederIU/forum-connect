@@ -73,7 +73,7 @@ jobs:
 
   deploy-staging:
     needs: [build]
-    # github.event_name allein reicht nicht, da auch Feature-Branches Push-Events auslösen
+    # Event und Branch werden bewusst im Job selbst geprüft, damit der Schutz auch bei später erweiterten Triggern bestehen bleibt
     if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
     runs-on: ubuntu-latest
     environment: staging
@@ -112,7 +112,7 @@ jobs:
 
   deploy-production:
     needs: [deploy-staging]
-    # if-Bedingung muss auf beiden Deploy-Jobs stehen, da needs das Überspringen nicht weiterreicht
+    # Mit einer eigenen if-Bedingung greift die Skip-Weitergabe über needs nicht mehr, daher steht die vollständige Bedingung bewusst auch auf diesem Job
     if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
     runs-on: ubuntu-latest
     environment: production
