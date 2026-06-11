@@ -10,7 +10,7 @@ Definiert in `.github/workflows/ci-cd.yml`. Die Pipeline läuft bei jedem Pull R
 
 1. **Lint** prüft den Codestil mit PHP_CodeSniffer (PSR-12) und führt die statische Analyse mit PHPStan (Level 6) aus.
 2. **Test** führt die automatisierten PHPUnit-Tests gegen eine In-Memory-SQLite-Datenbank aus und prüft die ermittelte Line-Coverage gegen eine Mindestschwelle (Coverage-Gate).
-3. **Build** baut genau ein auslieferbares Docker-Image, prüft es im selben Schritt mit Trivy auf bekannte Schwachstellen (CRITICAL und HIGH, nicht blockierend, Befunde nur im Log) und lädt es erst bei einem Merge auf `main` mit dem Commit-SHA als Tag nach Docker Hub hoch.
+3. **Build** baut genau ein auslieferbares Docker-Image, prüft es in derselben Stufe mit Trivy auf bekannte Schwachstellen (CRITICAL und HIGH, nicht blockierend, Befunde nur im Log) und lädt es erst bei einem Merge auf `main` mit dem Commit-SHA als Tag nach Docker Hub hoch.
 4. **Deploy Staging** zieht das geprüfte SHA-Image, prüft es per HTTP-Smoke-Test und veröffentlicht es erst nach bestandenem Test unter dem Tag `:staging` (automatisch nach jedem Merge auf `main`).
 5. **Deploy Production** zieht nach manueller Freigabe dasselbe SHA-Image, prüft es erneut per Smoke-Test und veröffentlicht es erst nach bestandenem Test unter dem Tag `:production`.
 
@@ -50,7 +50,7 @@ Der Container legt die SQLite-Datenbank beim Start automatisch an (Schema und Ad
 | Container-Registry | Docker Hub |
 | Laufzeitumgebung | Apache im Container (DocumentRoot `public/`, Port 80), lokal alternativ XAMPP |
 | CI/CD | GitHub Actions, fünfstufige Pipeline (Runner `ubuntu-latest`) |
-| Deployment-Strategie | Mit Commit-SHA versehene Images plus verschiebbare Tags `:staging` und `:production`, HTTP-200-Smoke-Test |
+| Deployment-Strategie | Mit Commit-SHA versehene Images plus verschiebbare Tags `:staging` und `:production`, Smoke-Test gegen Health-Endpoint und Startseite |
 | Versionierung | Git + GitHub |
 
 ## Projektstruktur
