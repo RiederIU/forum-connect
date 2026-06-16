@@ -1,5 +1,5 @@
 # Digest verbindlich, Tag nur lesbar. Dependabot (docker) hält beides per PR aktuell.
-FROM php:8.2-apache@sha256:affc043fbd9acaa9a6394a71d162726fc0a6e4bea0400a3b94f925b6130858dd
+FROM php:8.2-apache@sha256:034cb2b91d74209744da4eec2696075ed97f52788668ffa68967fdd6ee6a306f
 
 # libsqlite3-dev liefert die Header, die docker-php-ext-install zum Kompilieren von pdo_sqlite braucht und die das Image nicht mitbringt.
 RUN apt-get update \
